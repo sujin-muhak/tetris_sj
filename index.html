@@ -3,491 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS/CSS/HTML 테트리스 게임</title>
-    
+    <title>JS Tetris</title>
     <style>
-        /* ================================== */
-        /* CSS: 스타일링 및 격자(Grid) 구현 */
-        /* ================================== */
+        /* CSS 스타일 */
         body {
-            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column; /* 팝업을 위해 flex-direction 추가 */
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f4f4f9;
+            background-color: #282c34; /* 배경색 */
+            font-family: Arial, sans-serif;
+            color: white;
+            flex-direction: column;
         }
 
-        /* --- 사용자명 입력 팝업 스타일 --- */
-        #user-prompt {
-            position: fixed;
+        #game-container {
+            display: flex;
+            gap: 20px;
+            background-color: #000000; /* 게임 영역 배경 */
+            padding: 10px;
+            border: 5px solid #61dafb; /* 테두리 */
+            box-shadow: 0 0 20px rgba(97, 218, 251, 0.8);
+        }
+
+        #grid {
+            display: grid;
+            /* JavaScript에서 생성될 격자 크기 */
+            border: 2px solid #333;
+        }
+
+        .cell {
+            width: 25px; /* 한 칸의 크기 */
+            height: 25px;
+            background-color: #111; /* 빈 칸 색상 */
+            border: 1px solid #000;
+            box-sizing: border-box;
+        }
+
+        /* 테트리스 블록 색상 */
+        .color-I { background-color: cyan; border: 1px solid #00cccc; }
+        .color-O { background-color: yellow; border: 1px solid #cccc00; }
+        .color-T { background-color: purple; border: 1px solid #800080; }
+        .color-S { background-color: green; border: 1px solid #008000; }
+        .color-Z { background-color: red; border: 1px solid #800000; }
+        .color-J { background-color: blue; border: 1px solid #000080; }
+        .color-L { background-color: orange; border: 1px solid #cc8400; }
+
+        #sidebar {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #next-piece {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid white;
+            text-align: center;
+        }
+
+        #next-grid {
+            display: grid;
+        }
+
+        .next-cell {
+            width: 20px;
+            height: 20px;
+            background-color: #111;
+            border: 1px solid #000;
+            box-sizing: border-box;
+        }
+
+        #score-board, #instructions {
+            margin-top: 10px;
+            padding: 10px;
+            border: 2px solid white;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #instructions p {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        h1 {
+            color: #61dafb;
+            margin-bottom: 20px;
+        }
+        
+        #game-over-screen {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none; /* 초기에는 숨김 */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10;
         }
-        .prompt-box {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
+
+        #game-over-screen h2 {
+            font-size: 3em;
+            color: red;
         }
-        .prompt-box input {
-            padding: 10px;
-            margin: 10px 0 20px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 200px;
-        }
-        .prompt-box button {
+
+        #game-over-screen button {
             padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
+            font-size: 1.2em;
             cursor: pointer;
-        }
-        /* --------------------------------- */
-
-        .game-container {
-            display: none; /* 초기에는 숨김 */
-            gap: 20px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
 
-        .grid {
-            width: 200px; /* 10칸 * 20px */
-            height: 400px; /* 20칸 * 20px */
-            display: grid;
-            grid-template-columns: repeat(10, 1fr); 
-            grid-template-rows: repeat(20, 1fr);
-            border: 5px solid #333;
-            background-color: #000;
-        }
-
-        /* 게임 보드의 개별 칸 스타일 */
-        .grid > div {
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        /* 블록이 채워졌을 때의 스타일 */
-        .tetromino {
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-right-color: rgba(0, 0, 0, 0.3);
-            border-bottom-color: rgba(0, 0, 0, 0.3);
-        }
-
-        /* 고정된 블록 */
-        .taken {
-             opacity: 0.9;
-        }
-
-        .info-panel {
-            padding: 10px;
-            text-align: left;
-        }
-
-        #player-name-display {
-            font-weight: bold;
-            color: #e67e22;
-            margin-bottom: 10px;
-        }
-
-        #next-shape {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #ccc;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            padding: 5px;
-        }
-
-        #next-shape div {
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        #start-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
-    <div id="user-prompt">
-        <div class="prompt-box">
-            <h2>테트리스 시작</h2>
-            <p>사용자명을 입력해 주세요.</p>
-            <input type="text" id="username-input" placeholder="사용자명 입력">
-            <button id="start-game-button">게임 시작</button>
-        </div>
-    </div>
 
-    <div class="game-container">
-        <div class="grid">
-        </div>
+    <h1>JS Tetris</h1>
 
-        <div class="info-panel">
-            <p id="player-name-display">플레이어: 대기 중</p> <h3>다음 블록</h3>
-            <div id="next-shape">
+    <div id="game-container">
+        <div id="grid">
             </div>
-            <p>점수: <span id="score">0</span></p>
-            <p>레벨: <span id="level">1</span></p>
-            <button id="start-button">게임 시작 / 일시정지</button>
-            <p style="margin-top: 20px;">**조작키**</p>
-            <ul>
-                <li>$\uparrow$: 회전</li>
-                <li>$\leftarrow$: 왼쪽 이동</li>
-                <li>$\rightarrow$: 오른쪽 이동</li>
-                <li>$\downarrow$: 아래로 이동</li>
-            </ul>
+        <div id="sidebar">
+            <div id="score-board">
+                <h2>점수</h2>
+                <div id="score">0</div>
+            </div>
+            <div id="next-piece">
+                <h2>다음 블록</h2>
+                <div id="next-grid">
+                    </div>
+            </div>
+            <div id="instructions">
+                <h2>조작법</h2>
+                <p>← / →: 이동</p>
+                <p>↑: 회전</p>
+                <p>↓: 소프트 드롭</p>
+                <p>Space: 하드 드롭</p>
+            </div>
         </div>
     </div>
     
+    <div id="game-over-screen">
+        <h2>GAME OVER</h2>
+        <p>최종 점수: <span id="final-score">0</span></p>
+        <button onclick="startGame()">다시 시작</button>
+    </div>
+
     <script>
-        const grid = document.querySelector('.grid');
-        const scoreDisplay = document.getElementById('score');
-        const levelDisplay = document.getElementById('level'); 
-        const startButton = document.getElementById('start-button');
-        const nextShapeDisplay = document.getElementById('next-shape');
-        const userPrompt = document.getElementById('user-prompt');
-        const usernameInput = document.getElementById('username-input');
-        const startGameButton = document.getElementById('start-game-button');
-        const playerNameDisplay = document.getElementById('player-name-display');
-        const gameContainer = document.querySelector('.game-container');
+        // JavaScript 로직
+        const GRID_WIDTH = 10;
+        const GRID_HEIGHT = 20;
+        const CELL_SIZE = 25; // CSS .cell 크기와 동일해야 함
 
-        const width = 10;
-        const height = 20;
-        let squares = []; 
-        let timerId;
-        let score = 0;
-        let level = 1; // 레벨 추가
-        let currentPosition = 4;
-        const colors = ['#00FFFF', '#0000FF', '#FFA500', '#FFFF00', '#008000', '#800080', '#FF0000']; 
+        const gridElement = document.getElementById('grid');
+        const nextGridElement = document.getElementById('next-grid');
+        const scoreElement = document.getElementById('score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreElement = document.getElementById('final-score');
 
-        // --- 테트로미노 정의 (기존 코드 유지) ---
-        const iTetromino = [[1, width + 1, width * 2 + 1, width * 3 + 1], [width, width + 1, width + 2, width + 3], [1, width + 1, width * 2 + 1, width * 3 + 1], [width, width + 1, width + 2, width + 3]];
-        const jTetromino = [[1, width + 1, width * 2 + 1, width * 2], [width, width + 1, width + 2, 2], [1, width + 1, width * 2 + 1, 2], [width, width + 1, width + 2, width * 2 + 2]];
-        const lTetromino = [[1, width + 1, width * 2 + 1, 2], [width, width + 1, width + 2, width * 2 + 2], [1, width + 1, width * 2 + 1, width * 2], [width, width * 2, width * 2 + 1, width * 2 + 2]];
-        const oTetromino = [[0, 1, width, width + 1], [0, 1, width, width + 1], [0, 1, width, width + 1], [0, 1, width, width + 1]];
-        const sTetromino = [[width, width + 1, 1, 2], [1, width + 1, width, width * 2], [width, width + 1, 1, 2], [1, width + 1, width, width * 2]];
-        const tTetromino = [[1, width, width + 1, width + 2], [1, width + 1, width * 2 + 1, width + 2], [width, width + 1, width + 2, width * 2 + 1], [width, 1, width + 1, width * 2 + 1]];
-        const zTetromino = [[0, 1, width + 1, width + 2], [2, width + 2, width + 1, width * 2 + 1], [0, 1, width + 1, width + 2], [2, width + 2, width + 1, width * 2 + 1]];
-        const theTetrominoes = [iTetromino, jTetromino, lTetromino, oTetromino, sTetromino, tTetromino, zTetromino];
-
-        let random = Math.floor(Math.random() * theTetrominoes.length);
-        let nextRandom = Math.floor(Math.random() * theTetrominoes.length);
-        let currentRotation = 0;
-        let current = theTetrominoes[random][currentRotation];
-
-        const displayWidth = 4;
-        const upNextTetrominoes = [
-            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 3 + 1], 
-            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 2], 
-            [1, displayWidth + 1, displayWidth * 2 + 1, 2], 
-            [0, 1, displayWidth, displayWidth + 1], 
-            [displayWidth, displayWidth + 1, 1, 2], 
-            [1, displayWidth, displayWidth + 1, displayWidth + 2], 
-            [0, 1, displayWidth + 1, displayWidth + 2] 
-        ];
-        const displaySquares = [];
-
-        // --- 초기 설정 ---
-
-        function createBoard() {
-            // 게임 보드 div 생성 (20줄 x 10칸 = 200개)
-            for (let i = 0; i < width * height; i++) {
-                const square = document.createElement('div');
-                grid.appendChild(square);
-                squares.push(square);
+        // 테트리스 블록 (테트로미노) 정의
+        const TETROMINOS = {
+            'I': {
+                matrix: [
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                ],
+                color: 'color-I'
+            },
+            'O': {
+                matrix: [
+                    [1, 1],
+                    [1, 1],
+                ],
+                color: 'color-O'
+            },
+            'T': {
+                matrix: [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0],
+                ],
+                color: 'color-T'
+            },
+            'S': {
+                matrix: [
+                    [0, 1, 1],
+                    [1, 1, 0],
+                    [0, 0, 0],
+                ],
+                color: 'color-S'
+            },
+            'Z': {
+                matrix: [
+                    [1, 1, 0],
+                    [0, 1, 1],
+                    [0, 0, 0],
+                ],
+                color: 'color-Z'
+            },
+            'J': {
+                matrix: [
+                    [1, 0, 0],
+                    [1, 1, 1],
+                    [0, 0, 0],
+                ],
+                color: 'color-J'
+            },
+            'L': {
+                matrix: [
+                    [0, 0, 1],
+                    [1, 1, 1],
+                    [0, 0, 0],
+                ],
+                color: 'color-L'
             }
-            // 바닥 역할을 할 추가 줄 생성 (충돌 감지용)
-            for (let i = 0; i < width; i++) {
-                const taken = document.createElement('div');
-                taken.classList.add('taken');
-                // taken.style.backgroundColor = 'gray'; 
-                grid.appendChild(taken);
-                squares.push(taken);
+        };
+
+        let playfield; // 게임 판의 상태 (2차원 배열)
+        let tetromino; // 현재 떨어지는 블록
+        let nextTetromino; // 다음 블록
+        let score;
+        let gameLoopInterval;
+        let isGameOver;
+
+        // 게임판 초기화 함수
+        function initPlayfield() {
+            playfield = [];
+            for (let r = 0; r < GRID_HEIGHT; r++) {
+                playfield.push(new Array(GRID_WIDTH).fill(0)); // 0은 빈 칸을 의미
             }
-            
-            // 다음 블록 미리보기 div 생성 (4x4 = 16개)
+        }
+
+        // DOM 격자 생성 및 스타일 설정
+        function createGridElements() {
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_WIDTH}, ${CELL_SIZE}px)`;
+            gridElement.style.gridTemplateRows = `repeat(${GRID_HEIGHT}, ${CELL_SIZE}px)`;
+            gridElement.innerHTML = '';
+            for (let i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                gridElement.appendChild(cell);
+            }
+
+            // 다음 블록 미리보기 영역 초기화 (가장 큰 4x4에 맞춤)
+            nextGridElement.style.gridTemplateColumns = `repeat(4, 20px)`;
+            nextGridElement.style.gridTemplateRows = `repeat(4, 20px)`;
+            nextGridElement.innerHTML = '';
             for (let i = 0; i < 16; i++) {
-                const displaySquare = document.createElement('div');
-                nextShapeDisplay.appendChild(displaySquare);
-                displaySquares.push(displaySquare);
+                const cell = document.createElement('div');
+                cell.classList.add('next-cell');
+                nextGridElement.appendChild(cell);
             }
         }
 
-        createBoard();
-        
-        // --- 블록 그리기/지우기 (오류 수정) ---
-
-        function draw() {
-            current.forEach(index => {
-                const targetSquare = squares[currentPosition + index];
-                // 블록을 그리기 전에 해당 위치가 보드 내에 있고, 이미 고정된 블록이 아닌지 확인
-                if (targetSquare && !targetSquare.classList.contains('taken')) { 
-                    targetSquare.classList.add('tetromino');
-                    targetSquare.style.backgroundColor = colors[random];
-                }
-            });
-        }
-
-        function undraw() {
-            current.forEach(index => {
-                const targetSquare = squares[currentPosition + index];
-                if (targetSquare) {
-                    targetSquare.classList.remove('tetromino');
-                    targetSquare.style.backgroundColor = '';
-                }
-            });
-        }
-        
-        // --- 다음 블록 미리보기 (기존 코드 유지) ---
-
-        function displayShape() {
-            displaySquares.forEach(square => {
-                square.classList.remove('tetromino');
-                square.style.backgroundColor = '';
-            });
-
-            const nextBlock = upNextTetrominoes[nextRandom];
-            const nextColor = colors[nextRandom];
-
-            nextBlock.forEach(index => {
-                displaySquares[index].classList.add('tetromino');
-                displaySquares[index].style.backgroundColor = nextColor;
-            });
-        }
-
-        // --- 충돌 감지 및 고정 (기존 코드 유지) ---
-
-        function isAtRightEdge() {
-            return current.some(index => (currentPosition + index) % width === width - 1);
-        }
-
-        function isAtLeftEdge() {
-            return current.some(index => (currentPosition + index) % width === 0);
-        }
-
-        function checkCollision(direction) {
-            return current.some(index => 
-                squares[currentPosition + index + direction] &&
-                squares[currentPosition + index + direction].classList.contains('taken')
-            );
-        }
-
-        function freeze() {
-            // 1. 현재 블록을 'taken'으로 고정
-            current.forEach(index => squares[currentPosition + index].classList.add('taken'));
-
-            // 2. 줄 제거 확인
-            checkLineForRemoval();
-
-            // 3. 새 블록 생성 및 위치 초기화
-            random = nextRandom;
-            nextRandom = Math.floor(Math.random() * theTetrominoes.length);
-            currentRotation = 0;
-            current = theTetrominoes[random][currentRotation];
-            currentPosition = 4;
+        // 테트로미노를 무작위로 생성하는 함수
+        function generateTetromino() {
+            const keys = Object.keys(TETROMINOS);
+            const name = keys[Math.floor(Math.random() * keys.length)];
+            const piece = TETROMINOS[name];
             
-            // 4. 새 블록이 생성되자마자 충돌하면 게임 오버
-            if (checkCollision(0)) {
-                gameOver();
-                return;
-            }
+            // 시작 위치 계산
+            const matrixSize = piece.matrix.length;
+            const startCol = Math.floor(GRID_WIDTH / 2) - Math.floor(matrixSize / 2);
 
-            draw();
-            displayShape(); 
-        }
-        
-        // --- 이동 로직 (기존 코드 유지) ---
-
-        function moveDown() {
-            undraw();
-            if (!checkCollision(width)) { 
-                currentPosition += width;
-            } else {
-                freeze();
-            }
-            draw();
+            return {
+                name: name,
+                matrix: piece.matrix,
+                color: piece.color,
+                row: 0, // 시작 행
+                col: startCol // 시작 열
+            };
         }
 
-        function moveLeft() {
-            undraw();
-            if (!isAtLeftEdge() && !checkCollision(-1)) {
-                currentPosition -= 1;
+        // 다음 블록 가져오기 (초기 호출 시 첫 블록 생성)
+        function getNextTetromino() {
+            if (!nextTetromino) {
+                nextTetromino = generateTetromino();
             }
-            draw();
+            tetromino = nextTetromino;
+            nextTetromino = generateTetromino();
         }
 
-        function moveRight() {
-            undraw();
-            if (!isAtRightEdge() && !checkCollision(1)) {
-                currentPosition += 1;
-            }
-            draw();
+        // 블록을 회전시키는 함수
+        function rotateMatrix(matrix) {
+            const N = matrix.length;
+            const result = matrix.map((row, i) => row.map((_, j) => matrix[N - 1 - j][i]));
+            return result;
         }
 
-        function rotate() {
-            undraw();
-            const nextRotation = (currentRotation + 1) % current.length;
-            const nextBlock = theTetrominoes[random][nextRotation];
-            
-            const isIllegalMove = nextBlock.some(index => {
-                const targetPos = currentPosition + index;
-                
-                // 블록 회전 후 'taken' 블록과 겹치는지, 또는 보드 경계를 심하게 넘는지 확인
-                return (
-                    (squares[targetPos] && squares[targetPos].classList.contains('taken')) ||
-                    (targetPos % width === 0 && current.some(idx => (currentPosition + idx) % width === width - 1)) ||
-                    (targetPos % width === width - 1 && current.some(idx => (currentPosition + idx) % width === 0))
-                );
-            });
+        // 충돌 검사
+        function isValidMove(matrix, row, col) {
+            for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[r].length; c++) {
+                    if (matrix[r][c] !== 0) { // 블록이 있는 경우
+                        const newRow = row + r;
+                        const newCol = col + c;
 
-            if (!isIllegalMove) {
-                currentRotation = nextRotation;
-                current = nextBlock;
-            }
-            draw();
-        }
-
-        // --- 줄 제거 및 점수 (오류 수정) ---
-
-        function checkLineForRemoval() {
-            for (let i = 0; i < 200; i += width) {
-                const row = squares.slice(i, i + width);
-                const isRowFull = row.every(square => square.classList.contains('taken'));
-
-                if (isRowFull) {
-                    score += 10;
-                    scoreDisplay.innerHTML = score;
-
-                    // 1. 제거
-                    row.forEach(square => {
-                        square.classList.remove('taken', 'tetromino');
-                        square.style.backgroundColor = '';
-                        // 해당 DOM 요소를 그리드에서 실제로 제거
-                        grid.removeChild(square);
-                    });
-
-                    // 2. 재배치 (splice로 제거하고 concat으로 맨 앞에 빈 줄/DOM 요소 추가)
-                    const squaresRemoved = squares.splice(i, width); 
-                    
-                    // 새로운 빈 div (새로운 맨 윗줄)를 생성합니다.
-                    const newRow = [];
-                    for(let j = 0; j < width; j++) {
-                        const newSquare = document.createElement('div');
-                        newRow.push(newSquare);
+                        // 경계 밖이거나 이미 채워진 칸과 충돌하는 경우
+                        if (newCol < 0 || newCol >= GRID_WIDTH || newRow >= GRID_HEIGHT || (newRow >= 0 && playfield[newRow][newCol] !== 0)) {
+                            return false;
+                        }
                     }
-                    
-                    // squares 배열 업데이트: 제거된 줄을 새로운 빈 줄로 대체하고 기존 배열과 합칩니다.
-                    squares = newRow.concat(squares);
-                    
-                    // DOM 업데이트: grid의 모든 자식 요소를 새롭게 구성된 squares 배열에 맞춰 다시 추가합니다.
-                    squares.slice(0, 200).forEach(cell => grid.prepend(cell)); // 상단에 추가 (아래로 미는 효과)
+                }
+            }
+            return true;
+        }
+
+        // 블록을 게임 판에 고정
+        function placeTetromino() {
+            const matrix = tetromino.matrix;
+            const color = tetromino.name;
+
+            for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[r].length; c++) {
+                    if (matrix[r][c] !== 0) {
+                        const row = tetromino.row + r;
+                        const col = tetromino.col + c;
+
+                        if (row < 0) { // 블록이 화면 상단 밖에서 고정되면 게임 오버
+                            isGameOver = true;
+                            return;
+                        }
+                        playfield[row][col] = color;
+                    }
+                }
+            }
+            // 고정 후 라인 제거 시도
+            clearLines();
+        }
+
+        // 라인 제거 및 점수 계산
+        function clearLines() {
+            let linesCleared = 0;
+
+            for (let r = GRID_HEIGHT - 1; r >= 0; r--) {
+                if (playfield[r].every(cell => cell !== 0)) { // 줄이 가득 찬 경우
+                    linesCleared++;
+                    // 해당 줄을 제거하고 윗줄들을 한 칸씩 내립니다.
+                    for (let rr = r; rr > 0; rr--) {
+                        playfield[rr] = playfield[rr - 1];
+                    }
+                    playfield[0] = new Array(GRID_WIDTH).fill(0); // 맨 윗줄은 빈 칸으로 채웁니다.
+                    r++; // 현재 줄이 내려왔으므로 다시 검사합니다.
+                }
+            }
+
+            // 점수 업데이트 (테트리스 점수 규칙 단순화)
+            if (linesCleared > 0) {
+                score += [0, 100, 300, 500, 800][linesCleared]; // 1줄, 2줄, 3줄, 4줄
+            }
+        }
+
+        // 게임 상태를 화면에 그리는 함수
+        function draw() {
+            // 1. 플레이 필드 그리기
+            for (let r = 0; r < GRID_HEIGHT; r++) {
+                for (let c = 0; c < GRID_WIDTH; c++) {
+                    const cellIndex = r * GRID_WIDTH + c;
+                    const cell = gridElement.children[cellIndex];
+                    const cellValue = playfield[r][c];
+
+                    // 모든 클래스 초기화
+                    cell.className = 'cell';
+
+                    if (cellValue !== 0) {
+                        cell.classList.add(`color-${cellValue}`);
+                    }
+                }
+            }
+
+            // 2. 현재 떨어지는 블록 그리기
+            if (tetromino) {
+                const matrix = tetromino.matrix;
+                for (let r = 0; r < matrix.length; r++) {
+                    for (let c = 0; c < matrix[r].length; c++) {
+                        if (matrix[r][c] !== 0) {
+                            const gridRow = tetromino.row + r;
+                            const gridCol = tetromino.col + c;
+
+                            if (gridRow >= 0 && gridRow < GRID_HEIGHT && gridCol >= 0 && gridCol < GRID_WIDTH) {
+                                const cellIndex = gridRow * GRID_WIDTH + gridCol;
+                                const cell = gridElement.children[cellIndex];
+                                // 기존의 고정된 블록 위에 덧그릴 때 색깔이 유지되도록 클래스 추가
+                                cell.classList.add(tetromino.color);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 3. 점수 업데이트
+            scoreElement.textContent = score;
+
+            // 4. 다음 블록 미리보기 그리기
+            drawNextPiece();
+        }
+        
+        // 다음 블록 미리보기 그리기
+        function drawNextPiece() {
+            nextGridElement.innerHTML = ''; // 초기화
+            const matrix = nextTetromino.matrix;
+            const matrixSize = matrix.length;
+            
+            nextGridElement.style.gridTemplateColumns = `repeat(${matrixSize}, 20px)`;
+            nextGridElement.style.gridTemplateRows = `repeat(${matrixSize}, 20px)`;
+
+            for (let r = 0; r < matrixSize; r++) {
+                for (let c = 0; c < matrixSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('next-cell');
+                    if (matrix[r][c] !== 0) {
+                        cell.classList.add(nextTetromino.color);
+                    }
+                    nextGridElement.appendChild(cell);
                 }
             }
         }
-        
-        // --- 게임 상태 관리 ---
 
-        function gameOver() {
-            clearInterval(timerId);
-            timerId = null;
-            startButton.innerHTML = '게임 오버! 다시 시작';
-            document.removeEventListener('keyup', control);
-            const playerName = playerNameDisplay.innerText.split(': ')[1] || '플레이어';
-            alert(`게임 오버! ${playerName}님의 최종 점수: ${score}`);
-        }
-
-        function startGameOrPause() {
-            if (startButton.innerHTML.includes('오버')) {
-                location.reload(); 
+        // 게임 루프 (블록을 아래로 떨어뜨림)
+        function gameLoop() {
+            if (isGameOver) {
+                clearInterval(gameLoopInterval);
+                gameOverScreen.style.display = 'flex';
+                finalScoreElement.textContent = score;
                 return;
             }
 
-            if (timerId) {
-                clearInterval(timerId); // 일시정지
-                timerId = null;
-                startButton.innerHTML = '계속하기';
-                document.removeEventListener('keyup', control);
+            if (!tetromino) {
+                getNextTetromino();
+                if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
+                    isGameOver = true;
+                    gameLoop(); // 게임 오버 처리
+                    return;
+                }
+            }
+
+            // 블록을 한 칸 아래로 이동 시도
+            if (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+                tetromino.row++;
             } else {
-                draw();
-                displayShape();
-                timerId = setInterval(moveDown, 1000); 
-                startButton.innerHTML = '일시정지';
-                document.addEventListener('keyup', control);
+                // 이동 실패 (바닥 또는 다른 블록과 충돌)
+                placeTetromino();
+                tetromino = null; // 다음 블록 생성 준비
             }
+
+            draw();
         }
 
-        // --- 사용자명 입력 및 초기 게임 시작 로직 (추가됨) ---
-        function handleStartGame() {
-            const username = usernameInput.value.trim();
-            if (username === '') {
-                alert('사용자명을 입력해 주세요.');
-                return;
-            }
-
-            // 팝업 숨기기 및 게임 보드 표시
-            userPrompt.style.display = 'none';
-            gameContainer.style.display = 'flex';
-            playerNameDisplay.innerHTML = `플레이어: **${username}**`;
-
-            // 게임 시작 (버튼 클릭을 유도)
-            startButton.innerHTML = '게임 시작';
-            displayShape(); 
-        }
-
-        // --- 이벤트 리스너 ---
-
-        // 팝업의 "게임 시작" 버튼
-        startGameButton.addEventListener('click', handleStartGame);
-        // 사용자명 입력창에서 Enter 키
-        usernameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                handleStartGame();
-            }
-        });
-        
-        // 게임 본체의 "게임 시작 / 일시정지" 버튼
-        startButton.addEventListener('click', startGameOrPause);
-
-        function control(e) {
-            if (!timerId) return; // 게임이 일시정지/종료 상태면 조작 불가
+        // 키보드 이벤트 핸들러
+        document.addEventListener('keydown', (e) => {
+            if (isGameOver) return;
+            if (!tetromino) return;
 
             if (e.key === 'ArrowLeft') {
-                moveLeft();
+                if (isValidMove(tetromino.matrix, tetromino.row, tetromino.col - 1)) {
+                    tetromino.col--;
+                }
             } else if (e.key === 'ArrowRight') {
-                moveRight();
+                if (isValidMove(tetromino.matrix, tetromino.row, tetromino.col + 1)) {
+                    tetromino.col++;
+                }
             } else if (e.key === 'ArrowDown') {
-                moveDown(); 
+                // 소프트 드롭 (바로 아래로 이동)
+                if (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+                    tetromino.row++;
+                    score += 1; // 소프트 드롭 점수
+                    draw();
+                }
             } else if (e.key === 'ArrowUp') {
-                rotate();
+                // 회전
+                const rotated = rotateMatrix(tetromino.matrix);
+                if (isValidMove(rotated, tetromino.row, tetromino.col)) {
+                    tetromino.matrix = rotated;
+                } else {
+                    // 벽차기 (Wall Kick) 구현 생략 - 간단한 버전
+                }
+            } else if (e.key === ' ') {
+                // 하드 드롭 (바닥까지 한번에)
+                while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+                    tetromino.row++;
+                    score += 2; // 하드 드롭 점수
+                }
+                placeTetromino();
+                tetromino = null;
+                // 하드 드롭 후 바로 게임 루프 실행하여 다음 블록 생성
+                gameLoop(); 
             }
+            draw();
+        });
+
+        // 게임 시작/재시작 함수
+        function startGame() {
+            initPlayfield();
+            createGridElements();
+            score = 0;
+            tetromino = null;
+            nextTetromino = null;
+            isGameOver = false;
+            gameOverScreen.style.display = 'none';
+            
+            // 초기 다음 블록 설정 (게임 루프에서 첫 블록이 생성되도록)
+            nextTetromino = generateTetromino(); 
+            drawNextPiece();
+            
+            // 기존 인터벌 제거
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+            }
+            // 게임 루프 500ms(0.5초) 간격으로 실행
+            gameLoopInterval = setInterval(gameLoop, 500);
+            draw(); // 초기 화면 그리기
         }
+
+        // 페이지 로드 시 게임 시작
+        window.onload = startGame;
     </script>
 </body>
 </html>
