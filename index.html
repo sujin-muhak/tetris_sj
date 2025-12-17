@@ -12,7 +12,7 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* 팝업을 위해 flex-direction 추가 */
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -20,7 +20,7 @@
             background-color: #f4f4f9;
         }
 
-        /* 팝업 스타일 */
+        /* --- 사용자명 입력 팝업 스타일 --- */
         #user-prompt {
             position: fixed;
             top: 0;
@@ -55,8 +55,8 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        /* --------------------------------- */
 
-        /* 게임 컨테이너 스타일 */
         .game-container {
             display: none; /* 초기에는 숨김 */
             gap: 20px;
@@ -81,7 +81,6 @@
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-            /* border: 1px solid #111; */
         }
 
         /* 블록이 채워졌을 때의 스타일 */
@@ -90,7 +89,7 @@
             border-right-color: rgba(0, 0, 0, 0.3);
             border-bottom-color: rgba(0, 0, 0, 0.3);
         }
-        
+
         /* 고정된 블록 */
         .taken {
              opacity: 0.9;
@@ -101,14 +100,9 @@
             text-align: left;
         }
 
-        .info-panel h3 {
-            margin-top: 0;
-            color: #333;
-        }
-        
         #player-name-display {
             font-weight: bold;
-            color: #e67e22; /* 사용자명 강조 */
+            color: #e67e22;
             margin-bottom: 10px;
         }
 
@@ -145,7 +139,7 @@
     <div id="user-prompt">
         <div class="prompt-box">
             <h2>테트리스 시작</h2>
-            <p>게임에 사용할 사용자명을 입력해 주세요.</p>
+            <p>사용자명을 입력해 주세요.</p>
             <input type="text" id="username-input" placeholder="사용자명 입력">
             <button id="start-game-button">게임 시작</button>
         </div>
@@ -156,13 +150,12 @@
         </div>
 
         <div class="info-panel">
-            <p id="player-name-display">플레이어: 대기 중</p>
-            <h3>다음 블록</h3>
+            <p id="player-name-display">플레이어: 대기 중</p> <h3>다음 블록</h3>
             <div id="next-shape">
             </div>
             <p>점수: <span id="score">0</span></p>
             <p>레벨: <span id="level">1</span></p>
-            <button id="start-button">게임 시작</button>
+            <button id="start-button">게임 시작 / 일시정지</button>
             <p style="margin-top: 20px;">**조작키**</p>
             <ul>
                 <li>$\uparrow$: 회전</li>
@@ -176,7 +169,7 @@
     <script>
         const grid = document.querySelector('.grid');
         const scoreDisplay = document.getElementById('score');
-        const levelDisplay = document.getElementById('level'); // 레벨 표시 추가
+        const levelDisplay = document.getElementById('level'); 
         const startButton = document.getElementById('start-button');
         const nextShapeDisplay = document.getElementById('next-shape');
         const userPrompt = document.getElementById('user-prompt');
@@ -187,15 +180,14 @@
 
         const width = 10;
         const height = 20;
-        let squares = []; // 게임 보드 div 배열
+        let squares = []; 
         let timerId;
         let score = 0;
-        let level = 1;
+        let level = 1; // 레벨 추가
         let currentPosition = 4;
-        const colors = ['#00FFFF', '#0000FF', '#FFA500', '#FFFF00', '#008000', '#800080', '#FF0000']; // I, J, L, O, S, T, Z
+        const colors = ['#00FFFF', '#0000FF', '#FFA500', '#FFFF00', '#008000', '#800080', '#FF0000']; 
 
         // --- 테트로미노 정의 (기존 코드 유지) ---
-        // width는 10
         const iTetromino = [[1, width + 1, width * 2 + 1, width * 3 + 1], [width, width + 1, width + 2, width + 3], [1, width + 1, width * 2 + 1, width * 3 + 1], [width, width + 1, width + 2, width + 3]];
         const jTetromino = [[1, width + 1, width * 2 + 1, width * 2], [width, width + 1, width + 2, 2], [1, width + 1, width * 2 + 1, 2], [width, width + 1, width + 2, width * 2 + 2]];
         const lTetromino = [[1, width + 1, width * 2 + 1, 2], [width, width + 1, width + 2, width * 2 + 2], [1, width + 1, width * 2 + 1, width * 2], [width, width * 2, width * 2 + 1, width * 2 + 2]];
@@ -212,13 +204,13 @@
 
         const displayWidth = 4;
         const upNextTetrominoes = [
-            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 3 + 1], // I
-            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 2], // J 
-            [1, displayWidth + 1, displayWidth * 2 + 1, 2], // L
-            [0, 1, displayWidth, displayWidth + 1], // O
-            [displayWidth, displayWidth + 1, 1, 2], // S
-            [1, displayWidth, displayWidth + 1, displayWidth + 2], // T
-            [0, 1, displayWidth + 1, displayWidth + 2] // Z
+            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 3 + 1], 
+            [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 2], 
+            [1, displayWidth + 1, displayWidth * 2 + 1, 2], 
+            [0, 1, displayWidth, displayWidth + 1], 
+            [displayWidth, displayWidth + 1, 1, 2], 
+            [1, displayWidth, displayWidth + 1, displayWidth + 2], 
+            [0, 1, displayWidth + 1, displayWidth + 2] 
         ];
         const displaySquares = [];
 
@@ -235,7 +227,7 @@
             for (let i = 0; i < width; i++) {
                 const taken = document.createElement('div');
                 taken.classList.add('taken');
-                // taken.style.backgroundColor = 'gray'; // 바닥을 시각적으로 구분하려면 주석 해제
+                // taken.style.backgroundColor = 'gray'; 
                 grid.appendChild(taken);
                 squares.push(taken);
             }
@@ -250,11 +242,12 @@
 
         createBoard();
         
-        // --- 블록 그리기/지우기 ---
+        // --- 블록 그리기/지우기 (오류 수정) ---
 
         function draw() {
             current.forEach(index => {
                 const targetSquare = squares[currentPosition + index];
+                // 블록을 그리기 전에 해당 위치가 보드 내에 있고, 이미 고정된 블록이 아닌지 확인
                 if (targetSquare && !targetSquare.classList.contains('taken')) { 
                     targetSquare.classList.add('tetromino');
                     targetSquare.style.backgroundColor = colors[random];
@@ -272,16 +265,14 @@
             });
         }
         
-        // --- 다음 블록 미리보기 ---
+        // --- 다음 블록 미리보기 (기존 코드 유지) ---
 
         function displayShape() {
-            // 이전 미리보기 초기화
             displaySquares.forEach(square => {
                 square.classList.remove('tetromino');
                 square.style.backgroundColor = '';
             });
 
-            // 새 미리보기 그리기
             const nextBlock = upNextTetrominoes[nextRandom];
             const nextColor = colors[nextRandom];
 
@@ -291,7 +282,7 @@
             });
         }
 
-        // --- 충돌 감지 및 고정 ---
+        // --- 충돌 감지 및 고정 (기존 코드 유지) ---
 
         function isAtRightEdge() {
             return current.some(index => (currentPosition + index) % width === width - 1);
@@ -302,7 +293,6 @@
         }
 
         function checkCollision(direction) {
-            // 다음 위치에 'taken' 클래스(이미 고정된 블록 또는 바닥)가 있는지 확인
             return current.some(index => 
                 squares[currentPosition + index + direction] &&
                 squares[currentPosition + index + direction].classList.contains('taken')
@@ -330,14 +320,14 @@
             }
 
             draw();
-            displayShape(); // 다음 블록 미리보기 업데이트
+            displayShape(); 
         }
         
-        // --- 이동 로직 ---
+        // --- 이동 로직 (기존 코드 유지) ---
 
         function moveDown() {
             undraw();
-            if (!checkCollision(width)) { // width(10)는 아래로 한 칸 이동을 의미
+            if (!checkCollision(width)) { 
                 currentPosition += width;
             } else {
                 freeze();
@@ -368,17 +358,13 @@
             
             const isIllegalMove = nextBlock.some(index => {
                 const targetPos = currentPosition + index;
-                // 'taken' 블록과 겹치거나 보드 경계를 벗어나는지 확인
-                if (squares[targetPos].classList.contains('taken')) return true;
-
-                // 회전 후 보드 경계를 심플하게 벗어나는지 확인 (테트로미노 모양마다 보정 필요)
-                const isNearLeftEdge = current.some(idx => (currentPosition + idx) % width === 0);
-                const isNearRightEdge = current.some(idx => (currentPosition + idx) % width === width - 1);
-
-                if (isNearLeftEdge && nextBlock.some(idx => (currentPosition + idx) % width === width - 1)) return true;
-                if (isNearRightEdge && nextBlock.some(idx => (currentPosition + idx) % width === 0)) return true;
                 
-                return false;
+                // 블록 회전 후 'taken' 블록과 겹치는지, 또는 보드 경계를 심하게 넘는지 확인
+                return (
+                    (squares[targetPos] && squares[targetPos].classList.contains('taken')) ||
+                    (targetPos % width === 0 && current.some(idx => (currentPosition + idx) % width === width - 1)) ||
+                    (targetPos % width === width - 1 && current.some(idx => (currentPosition + idx) % width === 0))
+                );
             });
 
             if (!isIllegalMove) {
@@ -388,50 +374,40 @@
             draw();
         }
 
-        // --- 줄 제거 및 점수/레벨 ---
+        // --- 줄 제거 및 점수 (오류 수정) ---
 
         function checkLineForRemoval() {
-            let linesCleared = 0;
             for (let i = 0; i < 200; i += width) {
                 const row = squares.slice(i, i + width);
-                // 줄의 모든 칸에 'taken' 클래스가 있는지 확인
                 const isRowFull = row.every(square => square.classList.contains('taken'));
 
                 if (isRowFull) {
-                    linesCleared++;
-                    
+                    score += 10;
+                    scoreDisplay.innerHTML = score;
+
                     // 1. 제거
                     row.forEach(square => {
                         square.classList.remove('taken', 'tetromino');
                         square.style.backgroundColor = '';
+                        // 해당 DOM 요소를 그리드에서 실제로 제거
+                        grid.removeChild(square);
                     });
 
-                    // 2. 재배치 (splice로 제거하고 concat으로 맨 앞에 빈 줄 추가)
+                    // 2. 재배치 (splice로 제거하고 concat으로 맨 앞에 빈 줄/DOM 요소 추가)
                     const squaresRemoved = squares.splice(i, width); 
-                    squares = squaresRemoved.concat(squares);
                     
-                    // DOM 업데이트: 보드 상단으로 빈 줄을 채우고 기존 블록을 아래로 내림
-                    squares.slice(0, 200).forEach(cell => grid.appendChild(cell));
-                }
-            }
-
-            // 점수 계산 및 레벨 업
-            if (linesCleared > 0) {
-                // 라인 클리어 개수에 따른 점수 (예시: 10, 30, 50, 80)
-                const baseScore = linesCleared === 1 ? 10 : linesCleared === 2 ? 30 : linesCleared === 3 ? 50 : 80;
-                score += baseScore * level;
-                scoreDisplay.innerHTML = score;
-
-                // 레벨 업 확인 (예: 100점당 1레벨 업)
-                const newLevel = Math.floor(score / 100) + 1; 
-                if (newLevel > level) {
-                    level = newLevel;
-                    levelDisplay.innerHTML = level;
+                    // 새로운 빈 div (새로운 맨 윗줄)를 생성합니다.
+                    const newRow = [];
+                    for(let j = 0; j < width; j++) {
+                        const newSquare = document.createElement('div');
+                        newRow.push(newSquare);
+                    }
                     
-                    // 레벨에 따라 하강 속도 조정 (점점 빨라짐)
-                    clearInterval(timerId);
-                    const newInterval = 1000 - ((level - 1) * 80);
-                    timerId = setInterval(moveDown, Math.max(100, newInterval)); // 최소 100ms
+                    // squares 배열 업데이트: 제거된 줄을 새로운 빈 줄로 대체하고 기존 배열과 합칩니다.
+                    squares = newRow.concat(squares);
+                    
+                    // DOM 업데이트: grid의 모든 자식 요소를 새롭게 구성된 squares 배열에 맞춰 다시 추가합니다.
+                    squares.slice(0, 200).forEach(cell => grid.prepend(cell)); // 상단에 추가 (아래로 미는 효과)
                 }
             }
         }
@@ -443,13 +419,13 @@
             timerId = null;
             startButton.innerHTML = '게임 오버! 다시 시작';
             document.removeEventListener('keyup', control);
-            const playerName = playerNameDisplay.innerText.split(': ')[1];
+            const playerName = playerNameDisplay.innerText.split(': ')[1] || '플레이어';
             alert(`게임 오버! ${playerName}님의 최종 점수: ${score}`);
         }
 
         function startGameOrPause() {
             if (startButton.innerHTML.includes('오버')) {
-                location.reload(); // 게임 오버 상태에서 다시 시작
+                location.reload(); 
                 return;
             }
 
@@ -459,20 +435,15 @@
                 startButton.innerHTML = '계속하기';
                 document.removeEventListener('keyup', control);
             } else {
-                // 새 게임 시작 또는 계속
                 draw();
                 displayShape();
-                
-                // 레벨에 따른 하강 속도 설정
-                const initialInterval = 1000 - ((level - 1) * 80);
-                timerId = setInterval(moveDown, initialInterval); 
+                timerId = setInterval(moveDown, 1000); 
                 startButton.innerHTML = '일시정지';
                 document.addEventListener('keyup', control);
             }
         }
-        
-        // --- 사용자명 입력 및 초기 게임 시작 로직 ---
 
+        // --- 사용자명 입력 및 초기 게임 시작 로직 (추가됨) ---
         function handleStartGame() {
             const username = usernameInput.value.trim();
             if (username === '') {
@@ -485,12 +456,10 @@
             gameContainer.style.display = 'flex';
             playerNameDisplay.innerHTML = `플레이어: **${username}**`;
 
-            // 다음 블록 미리보기 표시
+            // 게임 시작 (버튼 클릭을 유도)
+            startButton.innerHTML = '게임 시작';
             displayShape(); 
-            
-            // 게임 시작은 사용자가 '게임 시작' 버튼을 눌렀을 때 진행
         }
-
 
         // --- 이벤트 리스너 ---
 
